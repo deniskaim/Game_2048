@@ -1,5 +1,7 @@
 #include <iostream>
 #include <iomanip>
+#include <cstdlib>
+#include <ctime>
 using namespace std;
 void nicknameInput(char* nickname, const int NAMESIZE)
 {
@@ -17,7 +19,7 @@ void nicknameInput(char* nickname, const int NAMESIZE)
 		cin.ignore(INT_MAX, '\n');
 		cout << "This username is too long. Choose another one!" << endl;
 		/// Tuk shte e umestno da pravq proverka dali imeto veche e zaeto
-		
+
 	} while (true);
 
 }
@@ -68,6 +70,9 @@ void deleteBoard(int** board, int gridSize)
 }
 int calculateScore(int** board, int gridSize)
 {
+	if (!board)
+		return 0;
+
 	int score = 0;
 	for (int i = 0; i < gridSize; i++)
 	{
@@ -95,6 +100,35 @@ void printBoardAndScore(int** board, int gridSize, int score)
 	cout << "Score: " << score << endl;
 	cout << endl;
 }
+void addRandomTile(int** board, int gridSize)
+{
+	if (!board)
+		return;
+
+	srand(time(NULL));
+	int row, column;
+	do
+	{
+		row = rand() % gridSize;
+		column = rand() % gridSize;
+	} while (board[row][column] != 0);
+
+	int value = (rand() % 2 + 1) * 2;
+	board[row][column] = value;
+}
+void beginGame(int** board, int gridSize, int score)
+{
+	if (!board)
+		return;
+
+	printBoardAndScore(board, gridSize, score);
+	addRandomTile(board, gridSize);
+	addRandomTile(board, gridSize);
+
+	score = calculateScore(board, gridSize);
+	printBoardAndScore(board, gridSize, score);
+}
+
 int main()
 {
 	const int NAMESIZE = 50;
@@ -110,7 +144,8 @@ int main()
 	{
 		board[i] = new int[gridSize];
 	}
+
 	initialiseBoard(board, gridSize);
-	printBoardAndScore(board, gridSize, score);
+	beginGame(board, gridSize, score);
 	deleteBoard(board, gridSize);
 }

@@ -1,31 +1,33 @@
 #include <iostream>
+#include <iomanip>
 using namespace std;
 void nicknameInput(char* nickname, const int NAMESIZE)
 {
 	if (!nickname)
 		return;
-	
+
 	cout << "Enter your nickname: " << endl;
-	cin.getline(nickname, NAMESIZE);
-	while (cin.fail())
+	do
 	{
+		cin.getline(nickname, NAMESIZE);
+		if (!cin.fail())
+			return;
+
 		cin.clear();
 		cin.ignore(INT_MAX, '\n');
 		cout << "This username is too long. Choose another one!" << endl;
 		/// Tuk shte e umestno da pravq proverka dali imeto veche e zaeto
-		cin.getline(nickname, NAMESIZE);
-	}
+		
+	} while (true);
 
 }
 int gridSizeInput()
 {
 	unsigned gridSize;
 	cout << "Enter dimension: " << endl;
-	cin >> gridSize;
 
-	while (!(gridSize >= 4 && gridSize <= 10))
+	do
 	{
-		cout << "Please, enter an appropriate size for the grid!" << endl;
 		cin >> gridSize;
 		if (cin.fail())
 		{
@@ -33,8 +35,12 @@ int gridSizeInput()
 			cin.ignore(INT_MAX, '\n');
 			cout << "Invalid input. Please enter a number." << endl;
 		}
-	}
-	return gridSize;
+		else if (gridSize >= 4 && gridSize <= 10)
+			return gridSize;
+		else
+			cout << "Please, enter an appropriate size for the grid!" << endl;
+	} while (true);
+
 }
 void initialiseBoard(int** board, int gridSize)
 {
@@ -49,21 +55,6 @@ void initialiseBoard(int** board, int gridSize)
 		}
 	}
 }
-void printBoard(int** board, int gridSize)
-{
-	if (!board)
-		return;
-
-	for (int i = 0; i < gridSize; i++)
-	{
-		for (int j = 0; j < gridSize; j++)
-		{
-			cout << board[i][j] << " ";
-		}
-		cout << endl;
-		cout << endl;
-	}
-}
 void deleteBoard(int** board, int gridSize)
 {
 	if (!board)
@@ -74,6 +65,35 @@ void deleteBoard(int** board, int gridSize)
 		delete[] board[i];
 	}
 	delete[] board;
+}
+int calculateScore(int** board, int gridSize)
+{
+	int score = 0;
+	for (int i = 0; i < gridSize; i++)
+	{
+		for (int j = 0; j < gridSize; j++)
+		{
+			score += board[i][j];
+		}
+	}
+	return score;
+}
+void printBoardAndScore(int** board, int gridSize, int score)
+{
+	if (!board)
+		return;
+
+	for (int i = 0; i < gridSize; i++)
+	{
+		for (int j = 0; j < gridSize; j++)
+		{
+			cout << setw(5) << board[i][j];
+		}
+		cout << endl;
+		cout << endl;
+	}
+	cout << "Score: " << score << endl;
+	cout << endl;
 }
 int main()
 {
@@ -91,6 +111,6 @@ int main()
 		board[i] = new int[gridSize];
 	}
 	initialiseBoard(board, gridSize);
-	printBoard(board, gridSize);
+	printBoardAndScore(board, gridSize, score);
 	deleteBoard(board, gridSize);
 }

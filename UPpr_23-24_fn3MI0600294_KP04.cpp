@@ -44,6 +44,32 @@ int gridSizeInput()
 	} while (true);
 
 }
+char commandInput()
+{
+	char command;
+	const int SIZE = 2;
+	char input[SIZE];
+
+	cout << "Enter direction:" << endl;
+	do
+	{
+		cin.getline(input, SIZE);
+		if (cin.fail())
+		{
+			cin.clear();
+			cin.ignore(INT_MAX, '\n');
+		}
+		else
+		{
+			command = input[0];
+			if (command == 'w' || command == 'a' || command == 's' || command == 'd')
+				return command;
+		}
+		cout << "Please, enter a correct command!" << endl;
+	} 
+	while (true);
+}
+
 void initialiseBoard(int** board, int gridSize)
 {
 	if (!board)
@@ -100,6 +126,34 @@ void printBoardAndScore(int** board, int gridSize, int score)
 	cout << "Score: " << score << endl;
 	cout << endl;
 }
+
+void moveTilesUp(int** board, int gridSize)
+{
+
+}
+void moveTilesLeft(int** board, int gridSize)
+{
+
+}
+void moveTilesDown(int** board, int gridSize)
+{
+
+}
+void moveTilesRight(int** board, int gridSize)
+{
+
+}
+
+void moveTiles(int** board, int gridSize, char command)
+{
+	if (!board)
+		return;
+
+	if (command == 'w')moveTilesUp(board, gridSize);
+	if (command == 'a')moveTilesLeft(board, gridSize);
+	if (command == 's')moveTilesDown(board, gridSize);
+	if (command == 'd')moveTilesRight(board, gridSize);
+}
 void addRandomTile(int** board, int gridSize)
 {
 	if (!board)
@@ -121,12 +175,18 @@ void beginGame(int** board, int gridSize, int score)
 	if (!board)
 		return;
 
-	printBoardAndScore(board, gridSize, score);
+	char command;
 	addRandomTile(board, gridSize);
 	addRandomTile(board, gridSize);
 
 	score = calculateScore(board, gridSize);
 	printBoardAndScore(board, gridSize, score);
+
+	while (true)
+	{
+		command = commandInput();
+		moveTiles(board, gridSize, command);
+	}
 }
 
 int main()

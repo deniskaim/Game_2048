@@ -26,6 +26,7 @@ void nicknameInput(char* nickname, const int NAMESIZE)
 int gridSizeInput()
 {
 	unsigned gridSize;
+	cout << endl;
 	cout << "Enter dimension: " << endl;
 
 	do
@@ -43,6 +44,8 @@ int gridSizeInput()
 			cout << "Please, enter an appropriate size for the grid!" << endl;
 	} while (true);
 
+	cout << endl;
+
 }
 char commandInput()
 {
@@ -58,16 +61,20 @@ char commandInput()
 		{
 			cin.clear();
 			cin.ignore(INT_MAX, '\n');
+			cout << "Please, enter a correct command!" << endl;
 		}
 		else
 		{
 			command = input[0];
 			if (command == 'w' || command == 'a' || command == 's' || command == 'd')
+			{
 				return command;
+			}
+			cout << "Choose one of the following: 'w', 'a', 's', 'd'" << endl;
 		}
-		cout << "Please, enter a correct command!" << endl;
-	} 
-	while (true);
+	} while (true);
+
+	cout << endl;
 }
 
 void initialiseBoard(int** board, int gridSize)
@@ -114,6 +121,8 @@ void printBoardAndScore(int** board, int gridSize, int score)
 	if (!board)
 		return;
 
+	cout << endl;
+
 	for (int i = 0; i < gridSize; i++)
 	{
 		for (int j = 0; j < gridSize; j++)
@@ -127,32 +136,61 @@ void printBoardAndScore(int** board, int gridSize, int score)
 	cout << endl;
 }
 
-void moveTilesUp(int** board, int gridSize)
-{
-
-}
-void moveTilesLeft(int** board, int gridSize)
-{
-
-}
-void moveTilesDown(int** board, int gridSize)
-{
-
-}
-void moveTilesRight(int** board, int gridSize)
-{
-
-}
-
-void moveTiles(int** board, int gridSize, char command)
+void moveTilesUpInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand)
 {
 	if (!board)
 		return;
 
-	if (command == 'w')moveTilesUp(board, gridSize);
-	if (command == 'a')moveTilesLeft(board, gridSize);
-	if (command == 's')moveTilesDown(board, gridSize);
-	if (command == 'd')moveTilesRight(board, gridSize);
+	int i = row;
+
+	while (i - 1 >= 0 && board[i - 1][column] == 0)
+	{
+		i--;
+	}
+	if (i == row)
+		return;
+
+	board[i][column] = board[row][column];
+	board[row][column] = 0;
+	isSuccessfulCommand = true;
+}
+void moveTilesUp(int** board, int gridSize, bool& isSuccessfulCommand)
+{
+	if (!board)
+		return;
+
+	for (int i = 0; i < gridSize; i++)
+	{
+		for (int j = 0; j < gridSize; j++)
+		{
+			if (board[i][j] != 0)
+				moveTilesUpInColumn(board, gridSize, i, j, isSuccessfulCommand);
+		}
+	}
+}
+void moveTilesLeft(int** board, int gridSize, bool& isSuccessfulCommand)
+{
+
+}
+void moveTilesDown(int** board, int gridSize, bool& isSuccessfulCommand)
+{
+
+}
+void moveTilesRight(int** board, int gridSize, bool& isSuccessfulCommand)
+{
+
+}
+
+void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand)
+{
+	if (!board)
+		return;
+
+	if (command == 'w')moveTilesUp(board, gridSize, isSuccesfulCommand);
+	if (command == 'a')moveTilesLeft(board, gridSize, isSuccesfulCommand);
+	if (command == 's')moveTilesDown(board, gridSize, isSuccesfulCommand);
+	if (command == 'd')moveTilesRight(board, gridSize, isSuccesfulCommand);
+
 }
 void addRandomTile(int** board, int gridSize)
 {
@@ -182,11 +220,24 @@ void beginGame(int** board, int gridSize, int score)
 	score = calculateScore(board, gridSize);
 	printBoardAndScore(board, gridSize, score);
 
-	while (true)
+	cin.clear();
+	cin.ignore(INT_MAX, '\n');
+	while (true)  /// tuk shte dobavq uslovieto igrata da ne e zavyrshila
 	{
 		command = commandInput();
-		moveTiles(board, gridSize, command);
+		bool isSuccesfulCommand = false;
+		moveTiles(board, gridSize, command, isSuccesfulCommand);
+		if (isSuccesfulCommand == false)
+		{
+			cout << "Please, enter a new direction, the one you chose is not possible!" << endl;
+			cout << endl;
+			continue;
+		}
+		addRandomTile(board, gridSize);
+		score = calculateScore(board, gridSize);
+		printBoardAndScore(board, gridSize, score);
 	}
+
 }
 
 int main()

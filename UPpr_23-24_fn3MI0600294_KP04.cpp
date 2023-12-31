@@ -262,9 +262,48 @@ void moveTilesDown(int** board, int gridSize, bool& isSuccessfulCommand, bool** 
 		}
 	}
 }
+
+void moveTilesRightInRow(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
+{
+	if (!board || !isUsed)
+		return;
+
+	int j = column;
+
+	while (j + 1 < gridSize && board[row][j + 1] == 0)
+	{
+		j++;
+	}
+
+	if (j + 1 < gridSize && board[row][j + 1] == board[row][column] && !isUsed[row][j + 1])
+	{
+		board[row][j + 1] *= 2;
+		board[row][column] = 0;
+		isSuccessfulCommand = true;
+		isUsed[row][j + 1] = true;
+		return;
+	}
+
+	if (j == column)
+		return;
+
+	board[row][j] = board[row][column];
+	board[row][column] = 0;
+	isSuccessfulCommand = true;
+}
 void moveTilesRight(int** board, int gridSize, bool& isSuccessfulCommand, bool** isUsed)
 {
+	if (!board || !isUsed)
+		return;
 
+	for (int i = 0; i < gridSize; i++)
+	{
+		for (int j = gridSize - 1; j >= 0 ; j--)
+		{
+			if (board[i][j] != 0)
+				moveTilesRightInRow(board, gridSize, i, j, isSuccessfulCommand, isUsed);
+		}
+	}
 }
 
 void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand)

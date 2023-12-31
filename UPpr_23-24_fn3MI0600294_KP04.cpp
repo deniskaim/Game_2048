@@ -136,9 +136,9 @@ void printBoardAndScore(int** board, int gridSize, int score)
 	cout << endl;
 }
 
-void moveTilesUpInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand)
+void moveTilesUpInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
 {
-	if (!board)
+	if (!board || !isUsed)
 		return;
 
 	int i = row;
@@ -147,6 +147,16 @@ void moveTilesUpInColumn(int** board, int gridSize, int row, int column, bool& i
 	{
 		i--;
 	}
+	// TUK TRQBVA DA POLZVAM PROMENLIVA, KOQTO DA MI KAZVA DALI E IMALO OBEDINENIE V KLETKATA BOARD[I-1][COLUMN]
+	if (i - 1 >= 0 && board[i - 1][column] == board[row][column] && !isUsed[i - 1][column])
+	{
+		board[i - 1][column] *= 2;
+		board[row][column] = 0;
+		isSuccessfulCommand = true;
+		isUsed[i - 1][column] = true;
+		return;
+	}
+
 	if (i == row)
 		return;
 
@@ -154,9 +164,9 @@ void moveTilesUpInColumn(int** board, int gridSize, int row, int column, bool& i
 	board[row][column] = 0;
 	isSuccessfulCommand = true;
 }
-void moveTilesUp(int** board, int gridSize, bool& isSuccessfulCommand)
+void moveTilesUp(int** board, int gridSize, bool& isSuccessfulCommand, bool** isUsed)
 {
-	if (!board)
+	if (!board || !isUsed)
 		return;
 
 	for (int i = 0; i < gridSize; i++)
@@ -164,19 +174,57 @@ void moveTilesUp(int** board, int gridSize, bool& isSuccessfulCommand)
 		for (int j = 0; j < gridSize; j++)
 		{
 			if (board[i][j] != 0)
-				moveTilesUpInColumn(board, gridSize, i, j, isSuccessfulCommand);
+				moveTilesUpInColumn(board, gridSize, i, j, isSuccessfulCommand, isUsed);
 		}
 	}
 }
-void moveTilesLeft(int** board, int gridSize, bool& isSuccessfulCommand)
+void moveTilesLeft(int** board, int gridSize, bool& isSuccessfulCommand, bool** isUsed)
 {
 
 }
-void moveTilesDown(int** board, int gridSize, bool& isSuccessfulCommand)
+void moveTilesDownInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
 {
+	if (!board || !isUsed)
+		return;
 
+	int i = row;
+
+	while (i + 1 < gridSize && board[i + 1][column] == 0)
+	{
+		i++;
+	}
+
+	if (i + 1 < gridSize && board[i + 1][column] == board[row][column] && !isUsed[i + 1][column])
+	{
+		board[i + 1][column] *= 2;
+		board[row][column] = 0;
+		isSuccessfulCommand = true;
+		isUsed[i + 1][column] = true;
+		return;
+	}
+
+	if (i == row)
+		return;
+
+	board[i][column] = board[row][column];
+	board[row][column] = 0;
+	isSuccessfulCommand = true;
 }
-void moveTilesRight(int** board, int gridSize, bool& isSuccessfulCommand)
+void moveTilesDown(int** board, int gridSize, bool& isSuccessfulCommand, bool** isUsed)
+{
+	if (!board || !isUsed)
+		return;
+
+	for (int i = gridSize - 1; i >= 0; i--)
+	{
+		for (int j = 0; j < gridSize; j++)
+		{
+			if (board[i][j] != 0)
+				moveTilesDownInColumn(board, gridSize, i, j, isSuccessfulCommand, isUsed);
+		}
+	}
+}
+void moveTilesRight(int** board, int gridSize, bool& isSuccessfulCommand, bool** isUsed)
 {
 
 }
@@ -185,12 +233,36 @@ void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand
 {
 	if (!board)
 		return;
+	
+	bool** isUsed = new bool*[gridSize];
+	for (int i = 0; i < gridSize; i++)
+	{
+		isUsed[i] = new bool[gridSize];
+		for (int j = 0; j < gridSize; j++)
+		{
+			isUsed[i][j] = false;
+		}
+	}
+	
+	// tuk shte napravq dinamichna matrica, koqto da pomni dali e imalo obedinenie v kletkata,
+	/// za da moje 4 4 4 4 <- da stava 8 8, a ne 16
+	if (command == 'w')
+		moveTilesUp(board, gridSize, isSuccesfulCommand, isUsed);
 
-	if (command == 'w')moveTilesUp(board, gridSize, isSuccesfulCommand);
-	if (command == 'a')moveTilesLeft(board, gridSize, isSuccesfulCommand);
-	if (command == 's')moveTilesDown(board, gridSize, isSuccesfulCommand);
-	if (command == 'd')moveTilesRight(board, gridSize, isSuccesfulCommand);
+	else if (command == 'a')
+		moveTilesLeft(board, gridSize, isSuccesfulCommand, isUsed);
 
+	else if (command == 's')
+		moveTilesDown(board, gridSize, isSuccesfulCommand, isUsed);
+
+	else if (command == 'd')
+		moveTilesRight(board, gridSize, isSuccesfulCommand, isUsed);
+
+	for (int i = 0; i < gridSize; i++)
+	{
+		delete[] isUsed[i];
+	}
+	delete[] isUsed;
 }
 void addRandomTile(int** board, int gridSize)
 {

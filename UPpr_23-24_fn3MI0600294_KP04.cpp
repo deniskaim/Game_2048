@@ -135,6 +135,16 @@ void printBoardAndScore(int** board, int gridSize, int score)
 	cout << "Score: " << score << endl;
 	cout << endl;
 }
+void fillCopyBoard(int** copyBoard, int** board, int gridSize)
+{
+	for (int i = 0; i < gridSize; i++)
+	{
+		for (int j = 0; j < gridSize; j++)
+		{
+			copyBoard[i][j] = board[i][j];
+		}
+	}
+}
 
 void moveTilesUpInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
 {
@@ -178,6 +188,7 @@ void moveTilesUp(int** board, int gridSize, bool& isSuccessfulCommand, bool** is
 		}
 	}
 }
+
 void moveTilesLeftInRow(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
 {
 	if (!board || !isUsed)
@@ -220,6 +231,7 @@ void moveTilesLeft(int** board, int gridSize, bool& isSuccessfulCommand, bool** 
 		}
 	}
 }
+
 void moveTilesDownInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
 {
 	if (!board || !isUsed)
@@ -339,6 +351,65 @@ void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand
 	}
 	delete[] isUsed;
 }
+
+bool isGameOver(int** board, int gridSize, int score)
+{
+	for (int i = 0; i < gridSize; i++)
+	{
+		for (int j = 0; j < gridSize; j++)
+		{
+			if (board[i][j] == 2048)
+			{
+				cout << "Congrats, you have won !!! :)" << endl;
+				cout << "Your score is: " << score << endl;
+				return true;
+			}
+		}
+	}
+	int** copyBoard = new int* [gridSize];
+	for (int i = 0; i < gridSize; i++)
+	{
+		copyBoard[i] = new int[gridSize];
+	}
+	fillCopyBoard(copyBoard, board, gridSize);
+
+	bool** isUsedCopy = new bool* [gridSize];
+	for (int i = 0; i < gridSize; i++)
+	{
+		isUsedCopy[i] = new bool[gridSize];
+		for (int j = 0; j < gridSize; j++)
+		{
+			isUsedCopy[i][j] = false;
+		}
+	}
+
+	bool isPossible = false;
+	moveTilesUp(copyBoard, gridSize, isPossible, isUsedCopy);
+
+	fillCopyBoard(copyBoard, board, gridSize);
+	moveTilesDown(copyBoard, gridSize, isPossible, isUsedCopy);
+
+	fillCopyBoard(copyBoard, board, gridSize);
+	moveTilesLeft(copyBoard, gridSize, isPossible, isUsedCopy);
+
+	fillCopyBoard(copyBoard, board, gridSize);
+	moveTilesRight(copyBoard, gridSize, isPossible, isUsedCopy);
+
+	deleteBoard(copyBoard, gridSize);
+	for (int i = 0; i < gridSize; i++)
+	{
+		delete[] isUsedCopy[i];
+	}
+	delete[] isUsedCopy;
+
+	if (isPossible == false)
+	{
+		cout << "You have run out of moves ! Game over !!!" << endl;
+		return true;
+	}
+	return false;
+
+}
 void addRandomTile(int** board, int gridSize)
 {
 	if (!board)
@@ -369,7 +440,7 @@ void beginGame(int** board, int gridSize, int score)
 
 	cin.clear();
 	cin.ignore(INT_MAX, '\n');
-	while (true)  /// tuk shte dobavq uslovieto igrata da ne e zavyrshila
+	while (!isGameOver(board, gridSize, score))  /// tuk shte dobavq uslovieto igrata da ne e zavyrshila
 	{
 		command = commandInput();
 		bool isSuccesfulCommand = false;
@@ -389,7 +460,7 @@ void beginGame(int** board, int gridSize, int score)
 
 int main()
 {
-	const int NAMESIZE = 50;
+	const int NAMESIZE = 100;
 	int score = 0;
 	unsigned gridSize;
 	char nickname[NAMESIZE];

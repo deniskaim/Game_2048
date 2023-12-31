@@ -178,9 +178,47 @@ void moveTilesUp(int** board, int gridSize, bool& isSuccessfulCommand, bool** is
 		}
 	}
 }
+void moveTilesLeftInRow(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
+{
+	if (!board || !isUsed)
+		return;
+
+	int j = column;
+
+	while (j - 1 >= 0 && board[row][j - 1] == 0)
+	{
+		j--;
+	}
+
+	if (j - 1 >= 0 && board[row][j - 1] == board[row][column] && !isUsed[row][j - 1])
+	{
+		board[row][j - 1] *= 2;
+		board[row][column] = 0;
+		isSuccessfulCommand = true;
+		isUsed[row][j - 1] = true;
+		return;
+	}
+
+	if (j == column)
+		return;
+
+	board[row][j] = board[row][column];
+	board[row][column] = 0;
+	isSuccessfulCommand = true;
+}
 void moveTilesLeft(int** board, int gridSize, bool& isSuccessfulCommand, bool** isUsed)
 {
+	if (!board || !isUsed)
+		return;
 
+	for (int i = 0; i < gridSize; i++)
+	{
+		for (int j = 0; j < gridSize; j++)
+		{
+			if (board[i][j] != 0)
+				moveTilesLeftInRow(board, gridSize, i, j, isSuccessfulCommand, isUsed);
+		}
+	}
 }
 void moveTilesDownInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
 {
@@ -244,8 +282,6 @@ void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand
 		}
 	}
 	
-	// tuk shte napravq dinamichna matrica, koqto da pomni dali e imalo obedinenie v kletkata,
-	/// za da moje 4 4 4 4 <- da stava 8 8, a ne 16
 	if (command == 'w')
 		moveTilesUp(board, gridSize, isSuccesfulCommand, isUsed);
 

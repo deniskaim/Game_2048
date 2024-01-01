@@ -79,18 +79,18 @@ char commandInput()
 	cout << endl;
 }
 
-void initialiseBoard(int** board, int gridSize)
+int** createBoard(int gridSize)
 {
-	if (!board)
-		return;
-
+	int** board = new int* [gridSize];
 	for (int i = 0; i < gridSize; i++)
 	{
+		board[i] = new int[gridSize];
 		for (int j = 0; j < gridSize; j++)
 		{
 			board[i][j] = 0;
 		}
 	}
+	return board;
 }
 void deleteBoard(int** board, int gridSize)
 {
@@ -103,6 +103,17 @@ void deleteBoard(int** board, int gridSize)
 	}
 	delete[] board;
 }
+void fillCopyBoard(int** copyBoard, int** board, int gridSize)
+{
+	for (int i = 0; i < gridSize; i++)
+	{
+		for (int j = 0; j < gridSize; j++)
+		{
+			copyBoard[i][j] = board[i][j];
+		}
+	}
+}
+
 int calculateScore(int** board, int gridSize)
 {
 	if (!board)
@@ -136,16 +147,6 @@ void printBoardAndScore(int** board, int gridSize, int score)
 	}
 	cout << "Score: " << score << endl;
 	cout << endl;
-}
-void fillCopyBoard(int** copyBoard, int** board, int gridSize)
-{
-	for (int i = 0; i < gridSize; i++)
-	{
-		for (int j = 0; j < gridSize; j++)
-		{
-			copyBoard[i][j] = board[i][j];
-		}
-	}
 }
 
 void moveTilesUpInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
@@ -369,11 +370,7 @@ bool isGameOver(int** board, int gridSize, int score)
 			}
 		}
 	}
-	int** copyBoard = new int* [gridSize];
-	for (int i = 0; i < gridSize; i++)
-	{
-		copyBoard[i] = new int[gridSize];
-	}
+	int** copyBoard = createBoard(gridSize);
 	fillCopyBoard(copyBoard, board, gridSize);
 
 	bool** isUsedCopy = new bool* [gridSize];
@@ -490,12 +487,8 @@ void consoleMenu()
 		{
 			nicknameInput(nickname, NAMESIZE);
 			gridSize = gridSizeInput();
-			int** board = new int* [gridSize];
-			for (int i = 0; i < gridSize; i++)
-			{
-				board[i] = new int[gridSize];
-			}
-			initialiseBoard(board, gridSize);
+			int** board = createBoard(gridSize);
+
 			beginGame(board, gridSize, score);
 			deleteBoard(board, gridSize);
 			showMenu = true;

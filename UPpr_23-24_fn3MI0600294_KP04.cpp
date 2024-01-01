@@ -9,6 +9,8 @@ void nicknameInput(char* nickname, const int NAMESIZE)
 		return;
 
 	cout << "Enter your nickname: " << endl;
+	cin.clear();
+	cin.ignore(INT_MAX, '\n');
 	do
 	{
 		cin.getline(nickname, NAMESIZE);
@@ -362,6 +364,7 @@ bool isGameOver(int** board, int gridSize, int score)
 			{
 				cout << "Congrats, you have won !!! :)" << endl;
 				cout << "Your score is: " << score << endl;
+				cout << endl;
 				return true;
 			}
 		}
@@ -405,11 +408,12 @@ bool isGameOver(int** board, int gridSize, int score)
 	if (isPossible == false)
 	{
 		cout << "You have run out of moves ! Game over !!!" << endl;
+		cout << endl;
 		return true;
 	}
 	return false;
 
-}
+} 
 void addRandomTile(int** board, int gridSize)
 {
 	if (!board)
@@ -430,7 +434,7 @@ void beginGame(int** board, int gridSize, int score)
 {
 	if (!board)
 		return;
-
+	
 	char command;
 	addRandomTile(board, gridSize);
 	addRandomTile(board, gridSize);
@@ -457,24 +461,62 @@ void beginGame(int** board, int gridSize, int score)
 	}
 
 }
-
-int main()
+void consoleMenu()
 {
 	const int NAMESIZE = 100;
 	int score = 0;
 	unsigned gridSize;
 	char nickname[NAMESIZE];
+	bool showMenu = true;
 
-	nicknameInput(nickname, NAMESIZE);
-	gridSize = gridSizeInput();
-
-	int** board = new int* [gridSize];
-	for (int i = 0; i < gridSize; i++)
+	int choice;
+	while(true)
 	{
-		board[i] = new int[gridSize];
-	}
+		if (showMenu)
+		{
+			cout << "Select '1' to play, '2' to see the Leaderboard or '3' to quit!" << endl;
+			cout << "1. Start game\n2. Leaderboard\n3. Quit" << endl;
+		}
+		cin >> choice;
+		if (cin.fail())
+		{
+			cin.clear();
+			cin.ignore(INT_MAX, '\n');
+			cout << "Invalid input. Please enter a number." << endl;
+			showMenu = false;
 
-	initialiseBoard(board, gridSize);
-	beginGame(board, gridSize, score);
-	deleteBoard(board, gridSize);
+		}
+		else if (choice == 1)
+		{
+			nicknameInput(nickname, NAMESIZE);
+			gridSize = gridSizeInput();
+			int** board = new int* [gridSize];
+			for (int i = 0; i < gridSize; i++)
+			{
+				board[i] = new int[gridSize];
+			}
+			initialiseBoard(board, gridSize);
+			beginGame(board, gridSize, score);
+			deleteBoard(board, gridSize);
+			showMenu = true;
+
+		}
+		/// else if (choice == 2)
+		//tuk trqbva da dobavq leaderboard
+		else if (choice == 3)
+		{
+			cout << "Hope to see you back soon!" << endl;
+			break;
+		}
+		else
+		{
+			cout << "Please, try again. That's not a possible option" << endl;
+			showMenu = false;
+		}
+	} 
+}
+int main()
+{
+	cout << "Welcome to the game 2048!" << endl;
+	consoleMenu();
 }

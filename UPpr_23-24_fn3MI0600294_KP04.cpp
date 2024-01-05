@@ -175,7 +175,6 @@ void moveTilesUpInColumn(int** board, int gridSize, int row, int column, bool& i
 	{
 		i--;
 	}
-	// TUK TRQBVA DA POLZVAM PROMENLIVA, KOQTO DA MI KAZVA DALI E IMALO OBEDINENIE V KLETKATA BOARD[I-1][COLUMN]
 	if (i - 1 >= 0 && board[i - 1][column] == board[row][column] && !isUsed[i - 1][column])
 	{
 		board[i - 1][column] *= 2;
@@ -429,50 +428,6 @@ bool isGameOver(int** board, int gridSize, int score)
 	}
 
 	return false;
-
-	/*
-	int** copyBoard = createBoard(gridSize);
-	fillCopyBoard(copyBoard, board, gridSize);
-
-	bool** isUsedCopy = new bool* [gridSize];
-	for (int i = 0; i < gridSize; i++)
-	{
-		isUsedCopy[i] = new bool[gridSize];
-		for (int j = 0; j < gridSize; j++)
-		{
-			isUsedCopy[i][j] = false;
-		}
-	}
-
-	bool isPossible = false;
-	moveTilesUp(copyBoard, gridSize, isPossible, isUsedCopy);
-
-	fillCopyBoard(copyBoard, board, gridSize);
-	moveTilesDown(copyBoard, gridSize, isPossible, isUsedCopy);
-
-	fillCopyBoard(copyBoard, board, gridSize);
-	moveTilesLeft(copyBoard, gridSize, isPossible, isUsedCopy);
-
-	fillCopyBoard(copyBoard, board, gridSize);
-	moveTilesRight(copyBoard, gridSize, isPossible, isUsedCopy);
-
-	deleteBoard(copyBoard, gridSize);
-	for (int i = 0; i < gridSize; i++)
-	{
-		delete[] isUsedCopy[i];
-	}
-	delete[] isUsedCopy;
-	
-	if (isPossible == false)
-	{
-		cout << "You have run out of moves ! Game over !!!" << endl;
-		cout << "Your score is: " << score << endl;
-		cout << endl;
-		return true;
-	}
-	return false;
-	*/
-
 } 
 
 void addRandomTile(int** board, int gridSize)

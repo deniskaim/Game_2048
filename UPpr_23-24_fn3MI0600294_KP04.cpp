@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <cstdlib>
 #include <ctime>
+ 
 using namespace std;
 void nicknameInput(char* nickname, const int NAMESIZE)
 {
@@ -20,7 +21,6 @@ void nicknameInput(char* nickname, const int NAMESIZE)
 		cin.clear();
 		cin.ignore(INT_MAX, '\n');
 		cout << "This username is too long. Choose another one!" << endl;
-		/// Tuk shte e umestno da pravq proverka dali imeto veche e zaeto
 
 	} while (true);
 
@@ -79,6 +79,7 @@ char commandInput()
 	cout << endl;
 }
 
+
 int** createBoard(int gridSize)
 {
 	int** board = new int* [gridSize];
@@ -103,15 +104,29 @@ void deleteBoard(int** board, int gridSize)
 	}
 	delete[] board;
 }
-void fillCopyBoard(int** copyBoard, int** board, int gridSize)
+bool** createBoolMatrix(int gridSize)
 {
+	bool** mtx= new bool* [gridSize];
 	for (int i = 0; i < gridSize; i++)
 	{
+		mtx[i] = new bool[gridSize];
 		for (int j = 0; j < gridSize; j++)
 		{
-			copyBoard[i][j] = board[i][j];
+			mtx[i][j] = false;
 		}
 	}
+	return mtx;
+}
+void deleteBoolMatrix(bool** mtx, int gridSize)
+{
+	if (!mtx)
+		return;
+
+	for (int i = 0; i < gridSize; i++)
+	{
+		delete[] mtx[i];
+	}
+	delete[] mtx;
 }
 
 int calculateScore(int** board, int gridSize)
@@ -326,15 +341,7 @@ void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand
 	if (!board)
 		return;
 	
-	bool** isUsed = new bool*[gridSize];
-	for (int i = 0; i < gridSize; i++)
-	{
-		isUsed[i] = new bool[gridSize];
-		for (int j = 0; j < gridSize; j++)
-		{
-			isUsed[i][j] = false;
-		}
-	}
+	bool** isUsed = createBoolMatrix(gridSize);
 	
 	if (command == 'w')
 		moveTilesUp(board, gridSize, isSuccesfulCommand, isUsed);
@@ -348,15 +355,14 @@ void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand
 	else if (command == 'd')
 		moveTilesRight(board, gridSize, isSuccesfulCommand, isUsed);
 
-	for (int i = 0; i < gridSize; i++)
-	{
-		delete[] isUsed[i];
-	}
-	delete[] isUsed;
+	deleteBoolMatrix(isUsed, gridSize);
 }
 
-bool isGameOver(int** board, int gridSize, int score)
+bool checkFor2048(int** board, int gridSize, int score)
 {
+	if (!board)
+		return false;
+
 	for (int i = 0; i < gridSize; i++)
 	{
 		for (int j = 0; j < gridSize; j++)
@@ -370,6 +376,61 @@ bool isGameOver(int** board, int gridSize, int score)
 			}
 		}
 	}
+	return false;
+}
+bool areCoordinates(int row, int col, int gridSize)
+{
+	return ((row >= 0 && row < gridSize) && (col >= 0 && col < gridSize));
+}
+bool equalAdjacentElements(int** board, int gridSize, int row, int col)
+{
+	if (!board)
+		return false;
+
+	if (areCoordinates(row - 1, col, gridSize) && board[row - 1][col] == board[row][col])
+		return true;
+	if (areCoordinates(row + 1, col, gridSize) && board[row + 1][col] == board[row][col])
+		return true;
+	if (areCoordinates(row, col - 1, gridSize) && board[row][col - 1] == board[row][col])
+		return true;
+	if (areCoordinates(row, col + 1, gridSize) && board[row][col + 1] == board[row][col])
+		return true;
+
+	return false;
+
+
+}
+bool availableMoves(int** board, int gridSize, int score)
+{
+	for (int i = 0; i < gridSize; i++)
+	{
+		for (int j = 0; j < gridSize; j++)
+		{
+			if (board[i][j] == 0 || equalAdjacentElements(board, gridSize, i, j))
+				return true;
+		}
+	}
+	return false;
+}
+bool isGameOver(int** board, int gridSize, int score)
+{
+	/*
+	The game is over if we have managed to get the number 2048 or we can't move in any direction.
+	*/
+	if (checkFor2048(board, gridSize, score) == true)
+		return true;
+
+	if (!availableMoves(board, gridSize, score))
+	{
+		cout << "You have run out of moves ! Game over !!!" << endl;
+		cout << "Your score is: " << score << endl;
+		cout << endl;
+		return true;
+	}
+
+	return false;
+
+	/*
 	int** copyBoard = createBoard(gridSize);
 	fillCopyBoard(copyBoard, board, gridSize);
 
@@ -401,16 +462,19 @@ bool isGameOver(int** board, int gridSize, int score)
 		delete[] isUsedCopy[i];
 	}
 	delete[] isUsedCopy;
-
+	
 	if (isPossible == false)
 	{
 		cout << "You have run out of moves ! Game over !!!" << endl;
+		cout << "Your score is: " << score << endl;
 		cout << endl;
 		return true;
 	}
 	return false;
+	*/
 
 } 
+
 void addRandomTile(int** board, int gridSize)
 {
 	if (!board)
@@ -427,9 +491,9 @@ void addRandomTile(int** board, int gridSize)
 	int value = (rand() % 2 + 1) * 2;
 	board[row][column] = value;
 }
-void beginGame(int** board, int gridSize, int score)
+void beginGame(int** board, char* filename, int gridSize, int score)
 {
-	if (!board)
+	if (!board || !filename)
 		return;
 	
 	char command;
@@ -441,7 +505,7 @@ void beginGame(int** board, int gridSize, int score)
 
 	cin.clear();
 	cin.ignore(INT_MAX, '\n');
-	while (!isGameOver(board, gridSize, score))  /// tuk shte dobavq uslovieto igrata da ne e zavyrshila
+	while (!isGameOver(board, gridSize, score))
 	{
 		command = commandInput();
 		bool isSuccesfulCommand = false;
@@ -456,7 +520,8 @@ void beginGame(int** board, int gridSize, int score)
 		score = calculateScore(board, gridSize);
 		printBoardAndScore(board, gridSize, score);
 	}
-
+	/// char filename[]
+	/// updateLeaderboard();
 }
 void consoleMenu()
 {
@@ -489,13 +554,19 @@ void consoleMenu()
 			gridSize = gridSizeInput();
 			int** board = createBoard(gridSize);
 
-			beginGame(board, gridSize, score);
+			char filename[NAMESIZE];
+
+			beginGame(board, filename, gridSize, score);
 			deleteBoard(board, gridSize);
 			showMenu = true;
 
 		}
-		/// else if (choice == 2)
-		//tuk trqbva da dobavq leaderboard
+		else if (choice == 2)
+		{
+			char filename[NAMESIZE];
+			gridSize = gridSizeInput();
+			
+		}
 		else if (choice == 3)
 		{
 			cout << "Hope to see you back soon!" << endl;

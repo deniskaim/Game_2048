@@ -2,81 +2,207 @@
 #include <iomanip>
 #include <cstdlib>
 #include <ctime>
- 
+#include <fstream>
+
+const int NAME_SIZE = 100;
+const int MAX_PLAYERS = 5;
 using namespace std;
-void nicknameInput(char* nickname, const int NAMESIZE)
+void clearCin()
+{
+	cin.clear();
+	cin.ignore(INT_MAX, '\n');
+}
+void nicknameInput(char* nickname)
 {
 	if (!nickname)
 		return;
-
-	cout << "Enter your nickname: " << endl;
-	cin.clear();
-	cin.ignore(INT_MAX, '\n');
-	do
-	{
-		cin.getline(nickname, NAMESIZE);
-		if (!cin.fail())
-			return;
-
-		cin.clear();
-		cin.ignore(INT_MAX, '\n');
-		cout << "This username is too long. Choose another one!" << endl;
-
-	} while (true);
-
+	
+	cout << "Enter your nickname: ";
+	clearCin();
+	cin.getline(nickname, NAME_SIZE);
 }
 int gridSizeInput()
 {
-	unsigned gridSize;
+	const int MIN_SIZE = 4, MAX_SIZE = 10;
+	int gridSize;
+
 	cout << endl;
-	cout << "Enter dimension: " << endl;
+	cout << "Enter dimension: ";
 
 	do
 	{
 		cin >> gridSize;
-		if (cin.fail())
-		{
-			cin.clear();
-			cin.ignore(INT_MAX, '\n');
-			cout << "Invalid input. Please enter a number." << endl;
-		}
-		else if (gridSize >= 4 && gridSize <= 10)
+
+		if (gridSize >= MIN_SIZE && gridSize <= MAX_SIZE)
 			return gridSize;
 		else
-			cout << "Please, enter an appropriate size for the grid!" << endl;
+		{
+			cout << "Please, enter an appropriate size for the grid! It should be between " << MIN_SIZE << " and " << MAX_SIZE << "." << endl;
+			clearCin();
+		}
 	} while (true);
-
-	cout << endl;
 
 }
 char commandInput()
 {
 	char command;
-	const int SIZE = 2;
-	char input[SIZE];
+	bool isValidInput = false;
 
-	cout << "Enter direction:" << endl;
+	cout << "Enter direction: ";
 	do
 	{
-		cin.getline(input, SIZE);
-		if (cin.fail())
+		cin >> command;
+		isValidInput = (cin.peek() == '\n');
+		clearCin();
+
+		if (isValidInput && (command == 'w' || command == 'a' || command == 's' || command == 'd'))
 		{
-			cin.clear();
-			cin.ignore(INT_MAX, '\n');
-			cout << "Please, enter a correct command!" << endl;
+			return command;
 		}
 		else
-		{
-			command = input[0];
-			if (command == 'w' || command == 'a' || command == 's' || command == 'd')
-			{
-				return command;
-			}
-			cout << "Choose one of the following: 'w', 'a', 's', 'd'" << endl;
-		}
-	} while (true);
+			cout << "Choose one of the following: 'w', 'a', 's', 'd' ." << endl;
+		
 
+	} while (!isValidInput);
+}
+
+void getFilenameForGridSize(char* filename, int gridSize)
+{
+	if (!filename)
+		return;
+
+	snprintf(filename, NAME_SIZE, "leaderboard_%dx%d.txt", gridSize, gridSize);
+}
+void writeResultsToLeaderboardFile(char* filename, char** nicknames, const int* scores, int numPlayers)
+{
+	if (!filename || !nicknames || !scores)
+		return;
+
+	ofstream MyFile(filename);
+	if (!MyFile.is_open())
+		return;
+
+	for (int i = 0; i < numPlayers; i++)
+	{
+		MyFile << nicknames[i] << " " << scores[i] << endl;
+	}
+	MyFile.close();
+}
+void readLeaderboardFromFile(int gridSize)
+{
+	char filename[NAME_SIZE];
+	getFilenameForGridSize(filename, gridSize);
+
+	ifstream MyFile(filename);
+	if (!MyFile.is_open())
+	{
+		cout << "The file is empty! No players yet!" << endl;
+		cout << endl;
+		return;
+	}
+	const size_t LINE_SIZE = 110;
+	char nickname[LINE_SIZE];
+	int score;
+	int maxLength = 0;
+	
+	while (MyFile >> nickname >> score)
+	{
+		int length = strlen(nickname);
+		if (length > maxLength)
+			maxLength = length;
+	}
+	MyFile.close();
+
+	ifstream MyFile2(filename);
 	cout << endl;
+	cout << "Leaderboard for " << gridSize << " x " << gridSize << " board:" << endl;
+	while (MyFile2 >> nickname >> score)
+	{
+		cout << left << setw(maxLength + 1) << nickname << score << endl;
+	}
+	MyFile2.close();
+	cout << endl;
+}
+void insertAndSort(char* nicknames[], int* scores,  char* nicknamePlayer, int scorePlayer, int& numPlayers)
+{
+	if (!nicknames || !scores || !nicknamePlayer)
+		return;
+
+	int position = numPlayers;
+	for (int i = 0; i < numPlayers; i++)
+	{
+		if (scorePlayer > scores[i])
+		{
+			position = i;
+			break;
+		}
+	}
+	for (int i = numPlayers; i > position; i--)
+	{
+		strcpy_s(nicknames[i], NAME_SIZE,nicknames[i - 1]);
+		scores[i] = scores[i - 1];
+	}
+	strcpy_s(nicknames[position], NAME_SIZE, nicknamePlayer);
+	scores[position] = scorePlayer;
+
+	if (numPlayers < MAX_PLAYERS)
+		numPlayers++;
+}
+void initializeIntArray(int* scores)
+{
+	if (!scores)
+		return;
+
+	for (int i = 0; i < MAX_PLAYERS; i++)
+	{
+		scores[i] = 0;
+	}
+}
+void initializeCharArray(char** nicknames)
+{
+	if (!nicknames)
+		return;
+
+	for (int i = 0; i < MAX_PLAYERS; i++)
+	{
+		nicknames[i][0] = '\0'; 
+	}
+}
+void updateLeaderboard(int gridSize, char* nicknamePlayer, int scorePlayer)
+{
+	if (!nicknamePlayer)
+		return;
+
+	char filename[NAME_SIZE];
+	getFilenameForGridSize(filename, gridSize);
+
+	char nicknames[MAX_PLAYERS][NAME_SIZE];
+	char* nicknamesPtr[MAX_PLAYERS];
+	for (int i = 0; i < MAX_PLAYERS; i++)
+	{
+		nicknamesPtr[i] = nicknames[i];
+	}
+	int scores[MAX_PLAYERS];
+	initializeIntArray(scores);
+	initializeCharArray(nicknamesPtr);
+
+	int numPlayers = 0;
+
+	ifstream MyFile(filename);
+
+	char currentNickname[NAME_SIZE];
+	int currentScore;
+
+	while (MyFile >> currentNickname >> currentScore && numPlayers < MAX_PLAYERS)
+	{
+		strcpy_s(nicknames[numPlayers],NAME_SIZE,currentNickname);
+		scores[numPlayers] = currentScore;
+		numPlayers++;
+	}
+	MyFile.close();
+	insertAndSort(nicknamesPtr, scores, nicknamePlayer, scorePlayer, numPlayers);
+
+	writeResultsToLeaderboardFile(filename, nicknamesPtr, scores, numPlayers);
 }
 
 
@@ -359,6 +485,8 @@ void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand
 
 bool checkFor2048(int** board, int gridSize, int score)
 {
+	const int winningNumber = 2048;
+
 	if (!board)
 		return false;
 
@@ -366,13 +494,8 @@ bool checkFor2048(int** board, int gridSize, int score)
 	{
 		for (int j = 0; j < gridSize; j++)
 		{
-			if (board[i][j] == 2048)
-			{
-				cout << "Congrats, you have won !!! :)" << endl;
-				cout << "Your score is: " << score << endl;
-				cout << endl;
+			if (board[i][j] == winningNumber)
 				return true;
-			}
 		}
 	}
 	return false;
@@ -399,7 +522,7 @@ bool equalAdjacentElements(int** board, int gridSize, int row, int col)
 
 
 }
-bool availableMoves(int** board, int gridSize, int score)
+bool availableMoves(int** board, int gridSize)
 {
 	for (int i = 0; i < gridSize; i++)
 	{
@@ -411,19 +534,31 @@ bool availableMoves(int** board, int gridSize, int score)
 	}
 	return false;
 }
-bool isGameOver(int** board, int gridSize, int score)
+void printWinMessage(int score)
+{
+	cout << "Congrats, you have won !!! :)" << endl;
+	cout << "Your score is: " << score << endl;
+	cout << endl;
+}
+void printLossMessage(int score)
+{
+	cout << "You have run out of moves ! Game over !!!" << endl;
+	cout << "Your score is: " << score << endl;
+	cout << endl;
+}
+bool isGameOver(int** board, int gridSize, char* nickname, int score)
 {
 	/*
 	The game is over if we have managed to get the number 2048 or we can't move in any direction.
 	*/
 	if (checkFor2048(board, gridSize, score) == true)
-		return true;
-
-	if (!availableMoves(board, gridSize, score))
 	{
-		cout << "You have run out of moves ! Game over !!!" << endl;
-		cout << "Your score is: " << score << endl;
-		cout << endl;
+		printWinMessage(score);
+		return true;
+	}
+	if (!availableMoves(board, gridSize))
+	{
+		printLossMessage(score);
 		return true;
 	}
 
@@ -446,25 +581,28 @@ void addRandomTile(int** board, int gridSize)
 	int value = (rand() % 2 + 1) * 2;
 	board[row][column] = value;
 }
-void beginGame(int** board, char* filename, int gridSize, int score)
+void beginGame(int** board, int gridSize, char* nickname)
 {
-	if (!board || !filename)
+	if (!board)
 		return;
 	
+
 	char command;
 	addRandomTile(board, gridSize);
 	addRandomTile(board, gridSize);
 
-	score = calculateScore(board, gridSize);
+	int score = calculateScore(board, gridSize);
 	printBoardAndScore(board, gridSize, score);
 
-	cin.clear();
-	cin.ignore(INT_MAX, '\n');
-	while (!isGameOver(board, gridSize, score))
+	clearCin();
+
+	while (!isGameOver(board, gridSize, nickname, score))
 	{
 		command = commandInput();
+
 		bool isSuccesfulCommand = false;
 		moveTiles(board, gridSize, command, isSuccesfulCommand);
+
 		if (isSuccesfulCommand == false)
 		{
 			cout << "Please, enter a new direction, the one you chose is not possible!" << endl;
@@ -475,18 +613,17 @@ void beginGame(int** board, char* filename, int gridSize, int score)
 		score = calculateScore(board, gridSize);
 		printBoardAndScore(board, gridSize, score);
 	}
-	/// char filename[]
-	/// updateLeaderboard();
+	updateLeaderboard(gridSize,nickname, score);
+	
 }
 void consoleMenu()
 {
-	const int NAMESIZE = 100;
-	int score = 0;
 	unsigned gridSize;
-	char nickname[NAMESIZE];
+	char nickname[NAME_SIZE];
 	bool showMenu = true;
-
 	int choice;
+
+	cout << "Welcome to the game 2048!" << endl;
 	while(true)
 	{
 		if (showMenu)
@@ -495,32 +632,21 @@ void consoleMenu()
 			cout << "1. Start game\n2. Leaderboard\n3. Quit" << endl;
 		}
 		cin >> choice;
-		if (cin.fail())
+		if (choice == 1)
 		{
-			cin.clear();
-			cin.ignore(INT_MAX, '\n');
-			cout << "Invalid input. Please enter a number." << endl;
-			showMenu = false;
-
-		}
-		else if (choice == 1)
-		{
-			nicknameInput(nickname, NAMESIZE);
+			nicknameInput(nickname);
 			gridSize = gridSizeInput();
 			int** board = createBoard(gridSize);
 
-			char filename[NAMESIZE];
-
-			beginGame(board, filename, gridSize, score);
+			beginGame(board, gridSize, nickname);
 			deleteBoard(board, gridSize);
 			showMenu = true;
 
 		}
 		else if (choice == 2)
 		{
-			char filename[NAMESIZE];
 			gridSize = gridSizeInput();
-			
+			readLeaderboardFromFile(gridSize);
 		}
 		else if (choice == 3)
 		{
@@ -531,11 +657,11 @@ void consoleMenu()
 		{
 			cout << "Please, try again. That's not a possible option" << endl;
 			showMenu = false;
+			clearCin();
 		}
 	} 
 }
 int main()
 {
-	cout << "Welcome to the game 2048!" << endl;
 	consoleMenu();
 }

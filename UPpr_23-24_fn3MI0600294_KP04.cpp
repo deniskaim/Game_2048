@@ -1,3 +1,19 @@
+/**
+*
+* Solution to course project #4
+* Introduction to programming course
+* Faculty of Mathematics and Informatics of Sofia University
+* Winter semester 2023/2024
+*
+* @author Denis Kaim
+* @idnumber 3MI0600294
+* @compiler VC
+*
+* <Game 2048>
+*
+*/
+
+
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
@@ -68,6 +84,7 @@ char commandInput()
 
 void getFilenameForGridSize(char* filename, int gridSize)
 {
+	// This function creates a filename specific to the grid size. 
 	if (!filename)
 		return;
 
@@ -75,6 +92,8 @@ void getFilenameForGridSize(char* filename, int gridSize)
 }
 void writeResultsToLeaderboardFile(char* filename, char** nicknames, const int* scores, int numPlayers)
 {
+	// This function writes the nicknames and scores in the specific file in a descending order.
+
 	if (!filename || !nicknames || !scores)
 		return;
 
@@ -100,8 +119,7 @@ void readLeaderboardFromFile(int gridSize)
 		cout << endl;
 		return;
 	}
-	const size_t LINE_SIZE = 110;
-	char nickname[LINE_SIZE];
+	char nickname[NAME_SIZE];
 	int score;
 	int maxLength = 0;
 	
@@ -114,21 +132,29 @@ void readLeaderboardFromFile(int gridSize)
 	MyFile.close();
 
 	ifstream MyFile2(filename);
+
+	int place = 1;
+
 	cout << endl;
 	cout << "Leaderboard for " << gridSize << " x " << gridSize << " board:" << endl;
 	while (MyFile2 >> nickname >> score)
 	{
-		cout << left << setw(maxLength + 1) << nickname << score << endl;
+		cout << place++ << ". " << left << setw(maxLength + 1) << nickname << score << endl;
 	}
 	MyFile2.close();
 	cout << endl;
 }
 void insertAndSort(char* nicknames[], int* scores,  char* nicknamePlayer, int scorePlayer, int& numPlayers)
 {
+	// This function inserts the player's nickname and score in the array and sorts it in a descending order.
 	if (!nicknames || !scores || !nicknamePlayer)
 		return;
 
+
 	int position = numPlayers;
+	if (numPlayers == MAX_PLAYERS)
+		position = numPlayers - 1;
+
 	for (int i = 0; i < numPlayers; i++)
 	{
 		if (scorePlayer > scores[i])
@@ -137,7 +163,7 @@ void insertAndSort(char* nicknames[], int* scores,  char* nicknamePlayer, int sc
 			break;
 		}
 	}
-	for (int i = numPlayers; i > position; i--)
+	for (int i = numPlayers - 1; i > position; i--)
 	{
 		strcpy_s(nicknames[i], NAME_SIZE,nicknames[i - 1]);
 		scores[i] = scores[i - 1];
@@ -466,7 +492,11 @@ void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand
 	if (!board)
 		return;
 	
-	bool** isUsed = createBoolMatrix(gridSize);
+	bool** isUsed = createBoolMatrix(gridSize); 
+	/* 
+	* With the bool matrix we will check whether there has been a combination of two equal adjacent numbers, 
+	* so we can know whether it is allowed to make another combination in the same cell.
+	*/
 	
 	if (command == 'w')
 		moveTilesUp(board, gridSize, isSuccesfulCommand, isUsed);
@@ -485,7 +515,7 @@ void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand
 
 bool checkFor2048(int** board, int gridSize, int score)
 {
-	const int winningNumber = 2048;
+	const int WINNING_NUMBER = 2048;
 
 	if (!board)
 		return false;
@@ -494,7 +524,7 @@ bool checkFor2048(int** board, int gridSize, int score)
 	{
 		for (int j = 0; j < gridSize; j++)
 		{
-			if (board[i][j] == winningNumber)
+			if (board[i][j] == WINNING_NUMBER)
 				return true;
 		}
 	}
@@ -509,13 +539,10 @@ bool equalAdjacentElements(int** board, int gridSize, int row, int col)
 	if (!board)
 		return false;
 
-	if (areCoordinates(row - 1, col, gridSize) && board[row - 1][col] == board[row][col])
-		return true;
-	if (areCoordinates(row + 1, col, gridSize) && board[row + 1][col] == board[row][col])
-		return true;
-	if (areCoordinates(row, col - 1, gridSize) && board[row][col - 1] == board[row][col])
-		return true;
-	if (areCoordinates(row, col + 1, gridSize) && board[row][col + 1] == board[row][col])
+	if (areCoordinates(row - 1, col, gridSize) && board[row - 1][col] == board[row][col] ||
+		areCoordinates(row + 1, col, gridSize) && board[row + 1][col] == board[row][col] ||
+		areCoordinates(row, col - 1, gridSize) && board[row][col - 1] == board[row][col] ||
+		areCoordinates(row, col + 1, gridSize) && board[row][col + 1] == board[row][col])
 		return true;
 
 	return false;
@@ -578,7 +605,8 @@ void addRandomTile(int** board, int gridSize)
 		column = rand() % gridSize;
 	} while (board[row][column] != 0);
 
-	int value = (rand() % 2 + 1) * 2;
+
+	int value = (rand() % 2 + 1) * 2; // That way we can get either 2 or 4 as a random tile.
 	board[row][column] = value;
 }
 void beginGame(int** board, int gridSize, char* nickname)
@@ -618,7 +646,7 @@ void beginGame(int** board, int gridSize, char* nickname)
 }
 void consoleMenu()
 {
-	unsigned gridSize;
+	int gridSize;
 	char nickname[NAME_SIZE];
 	bool showMenu = true;
 	int choice;

@@ -152,8 +152,6 @@ void insertAndSort(char* nicknames[], int* scores,  char* nicknamePlayer, int sc
 
 
 	int position = numPlayers;
-	if (numPlayers == MAX_PLAYERS)
-		position = numPlayers - 1;
 
 	for (int i = 0; i < numPlayers; i++)
 	{
@@ -163,8 +161,14 @@ void insertAndSort(char* nicknames[], int* scores,  char* nicknamePlayer, int sc
 			break;
 		}
 	}
-	for (int i = numPlayers - 1; i > position; i--)
+	if (position == MAX_PLAYERS)
+		return;
+
+	for (int i = numPlayers; i > position; i--)
 	{
+		if (i == MAX_PLAYERS)
+			continue;
+
 		strcpy_s(nicknames[i], NAME_SIZE,nicknames[i - 1]);
 		scores[i] = scores[i - 1];
 	}
@@ -675,6 +679,7 @@ void consoleMenu()
 		{
 			gridSize = gridSizeInput();
 			readLeaderboardFromFile(gridSize);
+			showMenu = true;
 		}
 		else if (choice == 3)
 		{

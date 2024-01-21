@@ -608,7 +608,8 @@ bool isGameOver(int** board, int gridSize, int score, bool& isWinner)
 	/*
 	The game is over if we have managed to get the number 2048 or we can't move in any direction.
 	*/
-	return (isWinner = contains2048(board, gridSize)) || !availableMoves(board, gridSize) ;
+	isWinner = contains2048(board, gridSize);
+	return isWinner || !availableMoves(board, gridSize);
 } 
 
 void addRandomTile(int** board, int gridSize)

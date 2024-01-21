@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
+#include <cstring>
 
 const int NAME_SIZE = 101;
 const int MAX_PLAYERS = 5;

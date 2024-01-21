@@ -7,7 +7,7 @@
 *
 * @author Denis Kaim
 * @idnumber 3MI0600294
-* @compiler VC
+* @compiler Visual Studio
 *
 * <Game 2048>
 *
@@ -20,7 +20,7 @@
 #include <ctime>
 #include <fstream>
 
-const int NAME_SIZE = 100;
+const int NAME_SIZE = 101;
 const int MAX_PLAYERS = 5;
 using namespace std;
 void clearCin()
@@ -103,7 +103,8 @@ void writeResultsToLeaderboardFile(char* filename, char** nicknames, const int* 
 
 	for (int i = 0; i < numPlayers; i++)
 	{
-		MyFile << nicknames[i] << " " << scores[i] << endl;
+		MyFile << nicknames[i] << endl; 
+		MyFile << scores[i] << endl;
 	}
 	MyFile.close();
 }
@@ -123,28 +124,32 @@ void readLeaderboardFromFile(int gridSize)
 	int score;
 	int maxLength = 0;
 	
-	while (MyFile >> nickname >> score)
+	// With the maxLength variable we will be able to align the nicknames and scores perfectly in two columns
+	while (MyFile.getline(nickname, NAME_SIZE) && MyFile >> score)
 	{
 		int length = strlen(nickname);
 		if (length > maxLength)
 			maxLength = length;
-	}
-	MyFile.close();
 
-	ifstream MyFile2(filename);
+		MyFile.ignore(INT_MAX, '\n');
+
+	}
+	MyFile.clear();   
+	MyFile.seekg(0);
 
 	int place = 1;
 
 	cout << endl;
 	cout << "Leaderboard for " << gridSize << " x " << gridSize << " board:" << endl;
-	while (MyFile2 >> nickname >> score)
+	while (MyFile.getline(nickname, NAME_SIZE) && MyFile >> score)
 	{
 		cout << place++ << ". " << left << setw(maxLength + 1) << nickname << score << endl;
+		MyFile.ignore(INT_MAX, '\n');
 	}
-	MyFile2.close();
+	MyFile.close();
 	cout << endl;
 }
-void insertAndSort(char* nicknames[], int* scores,  char* nicknamePlayer, int scorePlayer, int& numPlayers)
+void insertAndSort(char** nicknames, int* scores,  char* nicknamePlayer, int scorePlayer, int& numPlayers)
 {
 	// This function inserts the player's nickname and score in the array and sorts it in a descending order.
 	if (!nicknames || !scores || !nicknamePlayer)
@@ -219,19 +224,27 @@ void updateLeaderboard(int gridSize, char* nicknamePlayer, int scorePlayer)
 	int numPlayers = 0;
 
 	ifstream MyFile(filename);
+	if (!MyFile.is_open())
+	{
+		insertAndSort(nicknamesPtr, scores, nicknamePlayer, scorePlayer, numPlayers);
+		writeResultsToLeaderboardFile(filename, nicknamesPtr, scores, numPlayers);
+		return;
+	}
 
 	char currentNickname[NAME_SIZE];
 	int currentScore;
 
-	while (MyFile >> currentNickname >> currentScore && numPlayers < MAX_PLAYERS)
+	while (MyFile.getline(currentNickname, NAME_SIZE) && MyFile >> currentScore && numPlayers < MAX_PLAYERS)
 	{
 		strcpy_s(nicknames[numPlayers],NAME_SIZE,currentNickname);
 		scores[numPlayers] = currentScore;
 		numPlayers++;
+
+		MyFile.ignore(INT_MAX, '\n');
+
 	}
 	MyFile.close();
 	insertAndSort(nicknamesPtr, scores, nicknamePlayer, scorePlayer, numPlayers);
-
 	writeResultsToLeaderboardFile(filename, nicknamesPtr, scores, numPlayers);
 }
 
@@ -320,7 +333,7 @@ void printBoardAndScore(int** board, int gridSize, int score)
 	cout << endl;
 }
 
-void moveTilesUpInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
+void moveTileUpInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
 {
 	if (!board || !isUsed)
 		return;
@@ -331,6 +344,7 @@ void moveTilesUpInColumn(int** board, int gridSize, int row, int column, bool& i
 	{
 		i--;
 	}
+	// if the tile above has the same value and it is allowed to make a combination in that cell, combine them
 	if (i - 1 >= 0 && board[i - 1][column] == board[row][column] && !isUsed[i - 1][column])
 	{
 		board[i - 1][column] *= 2;
@@ -357,12 +371,12 @@ void moveTilesUp(int** board, int gridSize, bool& isSuccessfulCommand, bool** is
 		for (int j = 0; j < gridSize; j++)
 		{
 			if (board[i][j] != 0)
-				moveTilesUpInColumn(board, gridSize, i, j, isSuccessfulCommand, isUsed);
+				moveTileUpInColumn(board, gridSize, i, j, isSuccessfulCommand, isUsed);
 		}
 	}
 }
 
-void moveTilesLeftInRow(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
+void moveTileLeftInRow(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
 {
 	if (!board || !isUsed)
 		return;
@@ -373,7 +387,7 @@ void moveTilesLeftInRow(int** board, int gridSize, int row, int column, bool& is
 	{
 		j--;
 	}
-
+	// if the tile on the left has the same value and it is allowed to make a combination in that cell, combine them
 	if (j - 1 >= 0 && board[row][j - 1] == board[row][column] && !isUsed[row][j - 1])
 	{
 		board[row][j - 1] *= 2;
@@ -400,12 +414,12 @@ void moveTilesLeft(int** board, int gridSize, bool& isSuccessfulCommand, bool** 
 		for (int j = 0; j < gridSize; j++)
 		{
 			if (board[i][j] != 0)
-				moveTilesLeftInRow(board, gridSize, i, j, isSuccessfulCommand, isUsed);
+				moveTileLeftInRow(board, gridSize, i, j, isSuccessfulCommand, isUsed);
 		}
 	}
 }
 
-void moveTilesDownInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
+void moveTileDownInColumn(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
 {
 	if (!board || !isUsed)
 		return;
@@ -416,7 +430,7 @@ void moveTilesDownInColumn(int** board, int gridSize, int row, int column, bool&
 	{
 		i++;
 	}
-
+	// if the tile beneath has the same value and it is allowed to make a combination in that cell, combine them
 	if (i + 1 < gridSize && board[i + 1][column] == board[row][column] && !isUsed[i + 1][column])
 	{
 		board[i + 1][column] *= 2;
@@ -443,12 +457,12 @@ void moveTilesDown(int** board, int gridSize, bool& isSuccessfulCommand, bool** 
 		for (int j = 0; j < gridSize; j++)
 		{
 			if (board[i][j] != 0)
-				moveTilesDownInColumn(board, gridSize, i, j, isSuccessfulCommand, isUsed);
+				moveTileDownInColumn(board, gridSize, i, j, isSuccessfulCommand, isUsed);
 		}
 	}
 }
 
-void moveTilesRightInRow(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
+void moveTileRightInRow(int** board, int gridSize, int row, int column, bool& isSuccessfulCommand, bool** isUsed)
 {
 	if (!board || !isUsed)
 		return;
@@ -459,7 +473,7 @@ void moveTilesRightInRow(int** board, int gridSize, int row, int column, bool& i
 	{
 		j++;
 	}
-
+	// if the tile on the right has the same value and it is allowed to make a combination in that cell, combine them
 	if (j + 1 < gridSize && board[row][j + 1] == board[row][column] && !isUsed[row][j + 1])
 	{
 		board[row][j + 1] *= 2;
@@ -486,7 +500,7 @@ void moveTilesRight(int** board, int gridSize, bool& isSuccessfulCommand, bool**
 		for (int j = gridSize - 1; j >= 0 ; j--)
 		{
 			if (board[i][j] != 0)
-				moveTilesRightInRow(board, gridSize, i, j, isSuccessfulCommand, isUsed);
+				moveTileRightInRow(board, gridSize, i, j, isSuccessfulCommand, isUsed);
 		}
 	}
 }
@@ -517,7 +531,7 @@ void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand
 	deleteBoolMatrix(isUsed, gridSize);
 }
 
-bool checkFor2048(int** board, int gridSize, int score)
+bool contains2048(int** board, int gridSize)
 {
 	const int WINNING_NUMBER = 2048;
 
@@ -555,6 +569,9 @@ bool equalAdjacentElements(int** board, int gridSize, int row, int col)
 }
 bool availableMoves(int** board, int gridSize)
 {
+	if (!board)
+		return false;
+
 	for (int i = 0; i < gridSize; i++)
 	{
 		for (int j = 0; j < gridSize; j++)
@@ -577,23 +594,20 @@ void printLossMessage(int score)
 	cout << "Your score is: " << score << endl;
 	cout << endl;
 }
-bool isGameOver(int** board, int gridSize, char* nickname, int score)
+void printEndGameMessage(int score, bool isWinner)
+{
+	if (isWinner)
+		printWinMessage(score);
+
+	else
+		printLossMessage(score);
+}
+bool isGameOver(int** board, int gridSize, int score, bool& isWinner)
 {
 	/*
 	The game is over if we have managed to get the number 2048 or we can't move in any direction.
 	*/
-	if (checkFor2048(board, gridSize, score) == true)
-	{
-		printWinMessage(score);
-		return true;
-	}
-	if (!availableMoves(board, gridSize))
-	{
-		printLossMessage(score);
-		return true;
-	}
-
-	return false;
+	return (isWinner = contains2048(board, gridSize)) || !availableMoves(board, gridSize) ;
 } 
 
 void addRandomTile(int** board, int gridSize)
@@ -627,8 +641,8 @@ void beginGame(int** board, int gridSize, char* nickname)
 	printBoardAndScore(board, gridSize, score);
 
 	clearCin();
-
-	while (!isGameOver(board, gridSize, nickname, score))
+	bool isWinner = false;
+	while (!isGameOver(board, gridSize, score, isWinner))
 	{
 		command = commandInput();
 
@@ -645,6 +659,7 @@ void beginGame(int** board, int gridSize, char* nickname)
 		score = calculateScore(board, gridSize);
 		printBoardAndScore(board, gridSize, score);
 	}
+	printEndGameMessage(score, isWinner);
 	updateLeaderboard(gridSize,nickname, score);
 	
 }

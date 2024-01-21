@@ -534,10 +534,10 @@ void moveTiles(int** board, int gridSize, char command, bool& isSuccesfulCommand
 
 bool contains2048(int** board, int gridSize)
 {
-	const int WINNING_NUMBER = 2048;
-
 	if (!board)
 		return false;
+
+	const int WINNING_NUMBER = 2048;
 
 	for (int i = 0; i < gridSize; i++)
 	{
@@ -605,6 +605,9 @@ void printEndGameMessage(int score, bool isWinner)
 }
 bool isGameOver(int** board, int gridSize, int score, bool& isWinner)
 {
+	if (!board)
+		return false;
+
 	/*
 	The game is over if we have managed to get the number 2048 or we can't move in any direction.
 	*/
@@ -631,7 +634,7 @@ void addRandomTile(int** board, int gridSize)
 }
 void beginGame(int** board, int gridSize, char* nickname)
 {
-	if (!board)
+	if (!board || !nickname)
 		return;
 	
 
